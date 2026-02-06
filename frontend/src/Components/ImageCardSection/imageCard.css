@@ -1,0 +1,98 @@
+:root {
+    --PrimaryColor: #003366;
+    --leafColor: #76B041;
+    --navlinkColor: #F2E9D8;
+    --accentColor: #EAF4E1;
+    --textColor: #212121;
+}
+.card-section {
+    text-align: center;
+    margin: 2em 0;
+  }
+  
+  .section-title {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 1em;
+    text-decoration-color:var(--PrimaryColor);
+  }
+  
+  .card-container {
+    display: flex;
+    justify-content: center;
+    gap: 1.5em;
+    flex-wrap: wrap;
+    
+  }
+  
+  .card {
+    width: 300px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--accentColor);
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  .card-image {
+    position: relative;
+  }
+  
+  .card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+  }
+  
+  .card-overlay {
+    position: absolute;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--accentColor);
+    text-align: center;
+    padding: 1em;
+    border-radius: 8px;
+    transition: bottom 0.3s ease;
+  }
+  
+  .card:hover .card-overlay {
+    bottom: 0;
+  }
+  
+  .card-overlay h3 {
+    font-size: 1.2em;
+    color: var(--leafColor);
+    margin-top: 0;
+  }
+  
+  .card-overlay p {
+    font-size: 0.9em;
+    margin: 0.5em 0;
+    color: var(--navlinkColor);
+  }
+  
+  .navigate-btn {
+    display: inline-block;
+    padding: 0.5em 1em;
+    margin-top: 1em;
+    background-color: var(--PrimaryColor);
+    color: var(--accentColor);
+    font-weight: bold;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+  
+  .navigate-btn:hover {
+    background-color: #002c57;
+  }
+
+  
