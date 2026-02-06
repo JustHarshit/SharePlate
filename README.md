@@ -193,7 +193,7 @@ Open a pull request.
 ### Contact
 For inquiries or collaboration:
 
-Email: laxman.chauhan223344@gmail.com
-       hpal52787@gmail.com 
+Email: ```laxman.chauhan223344@gmail.com```
+       ```hpal52787@gmail.com``` 
 
 # SharePlate
