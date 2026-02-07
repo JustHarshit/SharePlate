@@ -1,6 +1,6 @@
-# FoodSathi Web App
+# SharePlate Web App
 
-FoodSathi is a web application aimed at reducing food waste and promoting food donation. This application connects donors, volunteers, and organizations to work collaboratively toward a food-secure community.
+SharePlate is a web application aimed at reducing food waste and promoting food donation. This application connects donors, volunteers, and organizations to work collaboratively toward a food-secure community.
 
 
 ## Features
