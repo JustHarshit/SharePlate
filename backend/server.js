@@ -35,7 +35,7 @@ app.use(express.static(path.join(__dirname, 'build')));
 
 // Define a route for the root URL
 app.get('/', (req, res) => {
-    res.send('Welcome to the FoodSathi API!');
+    res.send('Welcome to the shareplate API!');
 });
 
 // Use routes
