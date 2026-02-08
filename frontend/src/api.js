@@ -1,7 +1,20 @@
-// src/api.js/
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
+import { getItem } from './utils/storage';
 
-const API_BASE_URL = 'http://localhost:5000/api';  // Base URL for your backend
+// Determine the correct API base URL
+const getBaseUrl = () => {
+  if (Capacitor.isNativePlatform()) {
+    // Production API for mobile apps
+    return 'https://your-production-domain.com/api';
+    // OR for testing with local backend on same network:
+    // return 'http://YOUR_LOCAL_IP:5000/api'; // e.g., http://192.168.1.100:5000/api
+  }
+  // For web development
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getBaseUrl();
 
 export const sendMessageToBot = async (message) => {
   try {
@@ -15,7 +28,7 @@ export const sendMessageToBot = async (message) => {
 
 export const fetchProtectedData = async (endpoint) => {
   try {
-    const token = localStorage.getItem('token');  // Assuming the token is stored in local storage
+    const token = localStorage.getItem('token');
     const response = await axios.get(`${API_BASE_URL}/${endpoint}`, {
       headers: {
         'Authorization': `Bearer ${token}`,

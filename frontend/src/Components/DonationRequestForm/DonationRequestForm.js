@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Geolocation } from '@capacitor/geolocation';
+import { isNative } from '../../utils/platform';
 import LoadingDialog from '../LoadingDialog/LoadingDialog';
 import MatchFoundDialog from '../MatchFoundDialog/MatchFoundDialog';
 import MatchNotFound from '../MatchNotFound/MatchNotFound';
@@ -10,94 +12,102 @@ function DonationRequestForm() {
   const [formData, setFormData] = useState({
     name: '',
     place: '',
-    purpose: '',
     phone: '',
     email: '',
     amount: '',
+    description: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [matchNotFound, setMatchNotFound] = useState(false);
   const [isMatchFound, setIsMatchFound] = useState(false);
-  const [donorName] = useState(formData.name); // You might want to pass actual donor name
-  const receiverName = ''; // Replace with actual receiver name if needed
+  const [donorName] = useState(formData.name);
+  const receiverName = '';
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
-      return;
-    }
+    getCurrentLocation();
+  }, []);
 
-    const successCallback = (position) => {
+  const getCurrentLocation = async () => {
+    try {
+      // Request permissions first (important for mobile)
+      const permission = await Geolocation.checkPermissions();
+      
+      if (permission.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          setError('Location permission denied');
+          return;
+        }
+      }
+
+      // Get current position
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+
       setLocation({
         lat: position.coords.latitude,
         lng: position.coords.longitude,
       });
-    };
-
-    const errorCallback = (error) => {
-      setError(error.message || 'An error occurred while fetching location.');
-    };
-
-    navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
-    const watchId = navigator.geolocation.watchPosition(successCallback, errorCallback);
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+    } catch (err) {
+      console.error('Error getting location:', err);
+      setError('Unable to get your location. Please enable location services.');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API or backend check
     setTimeout(() => {
       setIsLoading(false);
-      const isMatch = checkForMatch();
-
+      const isMatch = false;
       if (isMatch) {
         setIsMatchFound(true);
       } else {
         setMatchNotFound(true);
       }
+      console.log("Form submitted:", formData);
+      console.log("Current Location:", location);
     }, 3000);
-  };
-
-  const checkForMatch = () => {
-    // Replace this with actual match logic
-    const mockMatchCondition = false;
-    return mockMatchCondition;
   };
 
   const handleTrack = () => {
     alert('Tracking started!');
   };
 
-  const closeMatchNotFoundDialog = () => {
+  const closeModal = () => {
+    setIsMatchFound(false);
     setMatchNotFound(false);
   };
 
   return (
-    <div className="donation-request-section">
+    <div className="donation-section">
       {isLoading && <LoadingDialog />}
       {isMatchFound && (
         <MatchFoundDialog
           donorName={donorName}
           receiverName={receiverName}
-          onClose={() => setIsMatchFound(false)}
+          onClose={closeModal}
           onTrack={handleTrack}
         />
       )}
+
       {matchNotFound && (
-        <div className="overlay-container" onClick={closeMatchNotFoundDialog}>
-          <MatchNotFound />
+        <div className="overlay">
+          <MatchNotFound onClose={closeModal} />
         </div>
       )}
 
-      <form className="donation-request-form" onSubmit={handleSubmit}>
-        <h2>Request Food Donation</h2>
+      <form className="donation-form" onSubmit={handleSubmit}>
+        <h2>Donate Food</h2>
         {error && <p className="error">{error}</p>}
 
         <label>
@@ -105,12 +115,8 @@ function DonationRequestForm() {
           <input type="text" name="name" value={formData.name} onChange={handleChange} required />
         </label>
         <label>
-          Place Where Donation is Needed:
+          Place:
           <input type="text" name="place" value={formData.place} onChange={handleChange} required />
-        </label>
-        <label>
-          Purpose:
-          <input type="text" name="purpose" value={formData.purpose} onChange={handleChange} required />
         </label>
         <label>
           Phone Number:
@@ -121,8 +127,12 @@ function DonationRequestForm() {
           <input type="email" name="email" value={formData.email} onChange={handleChange} required />
         </label>
         <label>
-          Amount of Food Needed:
+          Amount:
           <input type="number" name="amount" value={formData.amount} onChange={handleChange} required />
+        </label>
+        <label>
+          Description of Food:
+          <textarea name="description" rows="4" value={formData.description} onChange={handleChange} required />
         </label>
 
         {location.lat && location.lng ? (

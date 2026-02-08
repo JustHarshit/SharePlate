@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { SiGoogle } from 'react-icons/si';
+import { setItem } from '../utils/storage';
 import './LoginPage.css';
 
 const Login = () => {
@@ -28,8 +29,8 @@ const Login = () => {
 
       if (response.ok) {
         setSuccessMessage('Login successful!');
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.user.role);
+        await setItem('token', data.token);
+        await setItem('role', data.user.role);
         login(data.user.role);
 
         navigate(

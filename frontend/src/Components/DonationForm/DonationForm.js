@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Geolocation } from '@capacitor/geolocation';
+import { isNative } from '../../utils/platform';
 import LoadingDialog from '../LoadingDialog/LoadingDialog';
 import MatchFoundDialog from '../MatchFoundDialog/MatchFoundDialog';
 import MatchNotFound from '../MatchNotFound/MatchNotFound';
@@ -19,36 +21,41 @@ function DonationForm() {
   const [matchNotFound, setMatchNotFound] = useState(false);
   const [isMatchFound, setIsMatchFound] = useState(false);
   const [donorName] = useState(formData.name);
-  const receiverName = ''; // Replace with actual receiver name
+  const receiverName = '';
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
-      return;
-    }
+    getCurrentLocation();
+  }, []);
 
-    const successCallback = (position) => {
+  const getCurrentLocation = async () => {
+    try {
+      // Request permissions first (important for mobile)
+      const permission = await Geolocation.checkPermissions();
+      
+      if (permission.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          setError('Location permission denied');
+          return;
+        }
+      }
+
+      // Get current position
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+
       setLocation({
         lat: position.coords.latitude,
         lng: position.coords.longitude,
       });
-    };
-
-    const errorCallback = (error) => {
-      const errorMessages = {
-        1: 'User denied the request for Geolocation.',
-        2: 'Location information is unavailable.',
-        3: 'The request to get user location timed out.',
-        0: 'An unknown error occurred.',
-      };
-      setError(errorMessages[error.code] || 'An unexpected error occurred.');
-    };
-
-    navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
-    const watchId = navigator.geolocation.watchPosition(successCallback, errorCallback);
-
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+    } catch (err) {
+      console.error('Error getting location:', err);
+      setError('Unable to get your location. Please enable location services.');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,7 +68,7 @@ function DonationForm() {
 
     setTimeout(() => {
       setIsLoading(false);
-      const isMatch = false; // Replace with actual match-checking logic
+      const isMatch = false;
       if (isMatch) {
         setIsMatchFound(true);
       } else {
@@ -131,7 +138,7 @@ function DonationForm() {
         {location.lat && location.lng ? (
           <>
             <p>
-              Your current location: Latitude: {location.lat}, Longitude: {location.lng}
+              Your current location: Latitude: {location.lat.toFixed(6)}, Longitude: {location.lng.toFixed(6)}
             </p>
             <div className="map-preview">
               <p>
@@ -140,18 +147,20 @@ function DonationForm() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
-                >
+                  >
                   View on Google Maps
                 </a>
               </p>
-              <iframe
-                width="100%"
-                height="300"
-                frameBorder="0"
-                src={`https://www.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed`}
-                allowFullScreen
-                title="Donor Location Map"
-              ></iframe>
+              {!isNative() && (
+                <iframe
+                  width="100%"
+                  height="300"
+                  frameBorder="0"
+                  src={`https://www.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed`}
+                  allowFullScreen
+                  title="Donor Location Map"
+                ></iframe>
+              )}
             </div>
           </>
         ) : (
