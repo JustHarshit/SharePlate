@@ -2,6 +2,21 @@
 
 SharePlate is a web application aimed at reducing food waste and promoting food donation. This application connects donors, volunteers, and organizations to work collaboratively toward a food-secure community.
 
+## 📋 Table of Contents
+
+- [Features](#features)
+- [Documentation](#-documentation)
+- [Prerequisites](#prerequisites)
+- [Directory Structure](#directory-structure)
+- [Frontend Setup](#frontend-setup)
+- [Backend Setup](#backend-setup)
+- [Technologies Used](#technologies-used)
+- [API Endpoints](#api-endpoints)
+- [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
+- [Contribution](#contribution)
+- [Contact](#contact)
+
 
 ## Features
 
@@ -14,7 +29,8 @@ SharePlate is a web application aimed at reducing food waste and promoting food 
 ## 📚 Documentation
 
 - **[Deployment Guide](DEPLOYMENT.md)** - Comprehensive guide for deploying SharePlate to production
-- **[Quick Start](#frontend-setup)** - Get started with local development
+- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in minutes
+- **[Local Development](#frontend-setup)** - Development setup instructions
 
 
 ## Prerequisites
