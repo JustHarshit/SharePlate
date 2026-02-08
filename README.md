@@ -2,6 +2,21 @@
 
 SharePlate is a web application aimed at reducing food waste and promoting food donation. This application connects donors, volunteers, and organizations to work collaboratively toward a food-secure community.
 
+## 📋 Table of Contents
+
+- [Features](#features)
+- [Documentation](#-documentation)
+- [Prerequisites](#prerequisites)
+- [Directory Structure](#directory-structure)
+- [Frontend Setup](#frontend-setup)
+- [Backend Setup](#backend-setup)
+- [Technologies Used](#technologies-used)
+- [API Endpoints](#api-endpoints)
+- [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
+- [Contribution](#contribution)
+- [Contact](#contact)
+
 
 ## Features
 
@@ -9,6 +24,13 @@ SharePlate is a web application aimed at reducing food waste and promoting food 
 -> Food Donation: Register as a donor to contribute food surplus.
 -> Volunteer Participation: Join as a volunteer to facilitate food distribution.
 -> Community Connection: Collaborate with NGOs and local partners to reduce food waste.
+
+
+## 📚 Documentation
+
+- **[Deployment Guide](DEPLOYMENT.md)** - Comprehensive guide for deploying SharePlate to production
+- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in minutes
+- **[Local Development](#frontend-setup)** - Development setup instructions
 
 
 ## Prerequisites
@@ -165,17 +187,36 @@ REACT_APP_API_URL=http://localhost:5000
 
 ## Deployment
 
-*Frontend:*
+📘 **For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)**
 
-Build the React app:
-npm run build
+### Quick Docker Deployment
 
-Deploy the build folder to your hosting service (e.g., Vercel, Netlify).
+The easiest way to deploy SharePlate is using Docker:
 
-*Backend:*
+```bash
+# Run the deployment script
+./deploy.sh
 
-Use a service like Heroku, Render, or AWS to deploy your backend.
-Update the MONGO_URI and other environment variables accordingly.
+# Or manually with Docker Compose
+docker-compose up -d
+```
+
+This will start:
+- Frontend at http://localhost:3000
+- Backend API at http://localhost:5000
+- MongoDB at localhost:27017
+
+### Platform-Specific Deployment
+
+The deployment guide includes detailed instructions for:
+
+- **Frontend:** Vercel, Netlify, AWS S3, Nginx
+- **Backend:** Render, Railway, Heroku, AWS EC2/EBS, DigitalOcean
+- **Database:** MongoDB Atlas, self-hosted MongoDB
+- **Mobile:** Android (Google Play), iOS (App Store)
+- **Containerized:** Docker, Kubernetes, AWS ECS
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step guides.
 
 
 ## Contribution
