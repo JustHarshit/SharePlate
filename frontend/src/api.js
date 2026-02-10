@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
+// eslint-disable-next-line no-unused-vars
 import { getItem } from './utils/storage';
 
 // Determine the correct API base URL
