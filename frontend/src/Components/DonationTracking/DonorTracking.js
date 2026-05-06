@@ -145,10 +145,10 @@ const DonorTracking = () => {
               ) : progress === steps.length ? (
                 <>
                   <button disabled className="advance-button bg-green-700 cursor-default">
-                    🎉 Donation Complete
+                    Donation Complete
                   </button>
                   <button onClick={handleNewDonation} className="retry-button mt-2">
-                    ➕ New Donation
+                    New Donation
                   </button>
                 </>
               ) : (

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
-// eslint-disable-next-line no-unused-vars
-import { isNative } from '../../utils/platform';
+import { Capacitor } from '@capacitor/core';
 import LoadingDialog from '../LoadingDialog/LoadingDialog';
 import MatchFoundDialog from '../MatchFoundDialog/MatchFoundDialog';
 import MatchNotFound from '../MatchNotFound/MatchNotFound';
@@ -21,8 +20,7 @@ function DonationRequestForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [matchNotFound, setMatchNotFound] = useState(false);
   const [isMatchFound, setIsMatchFound] = useState(false);
-  const [donorName] = useState(formData.name);
-  const receiverName = '';
+  const [matchedOrg, setMatchedOrg] = useState(null);
 
   useEffect(() => {
     getCurrentLocation();
@@ -30,31 +28,44 @@ function DonationRequestForm() {
 
   const getCurrentLocation = async () => {
     try {
-      // Request permissions first (important for mobile)
-      const permission = await Geolocation.checkPermissions();
-      
-      if (permission.location !== 'granted') {
-        const request = await Geolocation.requestPermissions();
-        if (request.location !== 'granted') {
-          setError('Location permission denied');
-          return;
+      if (Capacitor.isNativePlatform()) {
+        const permission = await Geolocation.checkPermissions();
+        if (permission.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            setError('Location permission denied');
+            return;
+          }
         }
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        return;
       }
 
-      // Get current position
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      });
-
-      setLocation({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error('Error getting location:', err);
+          setError('Unable to get your location. Please allow browser location access.');
+        }
+      );
     } catch (err) {
       console.error('Error getting location:', err);
-      setError('Unable to get your location. Please enable location services.');
+      setError('Unable to get your location.');
     }
   };
 
@@ -63,74 +74,86 @@ function DonationRequestForm() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      const isMatch = false;
-      if (isMatch) {
+    try {
+      const response = await fetch('http://localhost:5000/api/match/donation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, location }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.matchedOrg) {
+        setMatchedOrg(data.matchedOrg);
         setIsMatchFound(true);
+        setMatchNotFound(false);
       } else {
+        setMatchedOrg(null);
         setMatchNotFound(true);
+        setIsMatchFound(false);
       }
-      console.log("Form submitted:", formData);
-      console.log("Current Location:", location);
-    }, 3000);
-  };
-
-  const handleTrack = () => {
-    alert('Tracking started!');
-  };
-
-  const closeModal = () => {
-    setIsMatchFound(false);
-    setMatchNotFound(false);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to submit donation request.');
+      setMatchNotFound(true);
+      setIsMatchFound(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="donation-section">
+    <div className="donation-request-section">
       {isLoading && <LoadingDialog />}
-      {isMatchFound && (
+      {isMatchFound && matchedOrg && (
         <MatchFoundDialog
-          donorName={donorName}
-          receiverName={receiverName}
-          onClose={closeModal}
-          onTrack={handleTrack}
+          donorName={formData.name}
+          receiverName={matchedOrg.name}
+          onClose={() => setIsMatchFound(false)}
+          onTrack={() => alert('Tracking started!')}
         />
       )}
 
       {matchNotFound && (
         <div className="overlay">
-          <MatchNotFound onClose={closeModal} />
+          <MatchNotFound onClose={() => setMatchNotFound(false)} />
         </div>
       )}
 
-      <form className="donation-form" onSubmit={handleSubmit}>
-        <h2>Donate Food</h2>
+      <form className="donation-request-form" onSubmit={handleSubmit}>
+        <h2>Request Donation</h2>
         {error && <p className="error">{error}</p>}
 
         <label>
           Name:
           <input type="text" name="name" value={formData.name} onChange={handleChange} required />
         </label>
+
         <label>
           Place:
           <input type="text" name="place" value={formData.place} onChange={handleChange} required />
         </label>
+
         <label>
           Phone Number:
           <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required />
         </label>
+
         <label>
           Email:
           <input type="email" name="email" value={formData.email} onChange={handleChange} required />
         </label>
+
         <label>
           Amount:
           <input type="number" name="amount" value={formData.amount} onChange={handleChange} required />
         </label>
+
         <label>
           Description of Food:
           <textarea name="description" rows="4" value={formData.description} onChange={handleChange} required />
@@ -140,16 +163,6 @@ function DonationRequestForm() {
           <>
             <p>Your current location: Latitude: {location.lat}, Longitude: {location.lng}</p>
             <div className="map-preview-section">
-              <p>
-                <a
-                  href={`https://www.google.com/maps?q=${location.lat},${location.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  View on Google Maps
-                </a>
-              </p>
               <iframe
                 width="100%"
                 height="300"
@@ -157,7 +170,7 @@ function DonationRequestForm() {
                 src={`https://www.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed`}
                 allowFullScreen
                 title="Requester Location Map"
-              ></iframe>
+              />
             </div>
           </>
         ) : (

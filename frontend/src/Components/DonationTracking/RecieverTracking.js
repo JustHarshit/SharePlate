@@ -101,7 +101,7 @@ const ReceiverTracking = () => {
             <>
               <p>No current active donations.</p>
               <button onClick={handleNewDonation} className="retry-button mt-2">
-                ➕ Request Donation
+                Request Donation
               </button>
             </>
           ) : (
@@ -139,10 +139,10 @@ const ReceiverTracking = () => {
               ) : progress === steps.length ? (
                 <>
                   <button disabled className="advance-button bg-green-700 cursor-default">
-                    🎉 Donation Received
+                    Donation Received
                   </button>
                   <button onClick={handleNewDonation} className="retry-button mt-2">
-                    ➕ New Request
+                    New Request
                   </button>
                 </>
               ) : (

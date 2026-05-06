@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const ngoRoutes = require('./routes/ngo');
 const restaurantRoutes = require('./routes/restaurant');
 const chatbotRoutes = require('./routes/chatbot/chatBot'); //chatbot
+const matchRoutes = require('./routes/match');
 
 dotenv.config();
 connectDB();
@@ -43,7 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/ngo', ngoRoutes);
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/chatbot', chatbotRoutes);
-
+app.use('/api/match', matchRoutes);
 // Fallback route to serve the frontend's index.html (Step 3)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));

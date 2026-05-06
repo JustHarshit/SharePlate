@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
-import { isNative } from '../../utils/platform';
+import { Capacitor } from '@capacitor/core';
 import LoadingDialog from '../LoadingDialog/LoadingDialog';
 import MatchFoundDialog from '../MatchFoundDialog/MatchFoundDialog';
 import MatchNotFound from '../MatchNotFound/MatchNotFound';
@@ -20,8 +20,7 @@ function DonationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [matchNotFound, setMatchNotFound] = useState(false);
   const [isMatchFound, setIsMatchFound] = useState(false);
-  const [donorName] = useState(formData.name);
-  const receiverName = '';
+  const [matchedOrg, setMatchedOrg] = useState(null);
 
   useEffect(() => {
     getCurrentLocation();
@@ -29,28 +28,51 @@ function DonationForm() {
 
   const getCurrentLocation = async () => {
     try {
-      // Request permissions first (important for mobile)
-      const permission = await Geolocation.checkPermissions();
-      
-      if (permission.location !== 'granted') {
-        const request = await Geolocation.requestPermissions();
-        if (request.location !== 'granted') {
-          setError('Location permission denied');
-          return;
+      if (Capacitor.isNativePlatform()) {
+        const permission = await Geolocation.checkPermissions();
+        if (permission.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            setError('Location permission denied');
+            return;
+          }
         }
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        return;
       }
 
-      // Get current position
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      });
+      if (!navigator.geolocation) {
+        setError('Geolocation is not supported by your browser.');
+        return;
+      }
 
-      setLocation({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error('Error getting location:', err);
+          setError('Unable to get your location. Please allow browser location access.');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
     } catch (err) {
       console.error('Error getting location:', err);
       setError('Unable to get your location. Please enable location services.');
@@ -62,47 +84,57 @@ function DonationForm() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      const isMatch = false;
-      if (isMatch) {
+    try {
+      const response = await fetch('http://localhost:5000/api/match/donation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          location,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.matchedOrg) {
+        setMatchedOrg(data.matchedOrg);
         setIsMatchFound(true);
+        setMatchNotFound(false);
       } else {
+        setMatchedOrg(null);
         setMatchNotFound(true);
+        setIsMatchFound(false);
       }
-      console.log("Form submitted:", formData);
-      console.log("Current Location:", location);
-    }, 3000);
-  };
-
-  const handleTrack = () => {
-    alert('Tracking started!');
-  };
-
-  const closeModal = () => {
-    setIsMatchFound(false);
-    setMatchNotFound(false);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to submit donation request.');
+      setMatchNotFound(true);
+      setIsMatchFound(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="donation-section">
       {isLoading && <LoadingDialog />}
-      {isMatchFound && (
+      {isMatchFound && matchedOrg && (
         <MatchFoundDialog
-          donorName={donorName}
-          receiverName={receiverName}
-          onClose={closeModal}
-          onTrack={handleTrack}
+          donorName={formData.name}
+          receiverName={matchedOrg.name}
+          onClose={() => setIsMatchFound(false)}
+          onTrack={() => alert('Tracking started!')}
         />
       )}
 
       {matchNotFound && (
         <div className="overlay">
-          <MatchNotFound onClose={closeModal} />
+          <MatchNotFound onClose={() => setMatchNotFound(false)} />
         </div>
       )}
 
@@ -151,7 +183,6 @@ function DonationForm() {
                   View on Google Maps
                 </a>
               </p>
-              {!isNative() && (
                 <iframe
                   width="100%"
                   height="300"
@@ -160,7 +191,6 @@ function DonationForm() {
                   allowFullScreen
                   title="Donor Location Map"
                 ></iframe>
-              )}
             </div>
           </>
         ) : (
